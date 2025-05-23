@@ -8,9 +8,20 @@ import (
 
 func SetAuthCookie(w http.ResponseWriter, r *http.Request, token string) {
 	cookie := &http.Cookie{
-		Name:  "token",
-		Value: HashToken(token),
-		Path:  "/",
+		Name:   "token",
+		Value:  token,
+		Path:   "/",
+		MaxAge: 60 * 60 * 24 * 30,
+	}
+	http.SetCookie(w, cookie)
+}
+
+func ExtendAuthCookie(w http.ResponseWriter, r *http.Request, token string) {
+	cookie := &http.Cookie{
+		Name:   "token",
+		Value:  token,
+		Path:   "/",
+		MaxAge: 60 * 60 * 24 * 30,
 	}
 	http.SetCookie(w, cookie)
 }
@@ -21,6 +32,16 @@ func GetAuthCookie(r *http.Request) (string, error) {
 		return "", err
 	}
 	return cookie.Value, nil
+}
+
+func DeleteAuthCookie(w http.ResponseWriter, r *http.Request) {
+	cookie := &http.Cookie{
+		Name:   "token",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	}
+	http.SetCookie(w, cookie)
 }
 
 func HashToken(token string) string {

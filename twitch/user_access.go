@@ -14,8 +14,6 @@ import (
 	"twithoauth/utils"
 )
 
-const TwitchAuthURL = "https://id.twitch.tv/oauth2/authorize"
-
 var states = make(map[string]string)
 
 type TwitchHandlers struct {
@@ -35,7 +33,7 @@ func NewTwitchHandlers(clientID string, clientSecret string, storage *storage.St
 }
 
 func (h *TwitchHandlers) AuthorizeHandler(w http.ResponseWriter, r *http.Request) {
-	url, err := url.Parse(TwitchAuthURL)
+	url, err := url.Parse(utils.AuthorizeURL)
 	if err != nil {
 		logger.Log.Error(err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -81,7 +79,7 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 		"redirect_uri":  {"http://localhost:8080/callback"},
 	}
 
-	req, err := http.PostForm("https://id.twitch.tv/oauth2/token", form)
+	req, err := http.PostForm(utils.AccessTokenURL, form)
 	if err != nil {
 		logger.Log.Error(err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -101,7 +99,10 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 		WithField("expiresIn", token.ExpiresIn).
 		Debug("Got access token")
 
-	userData, err := GetUserData(token.AccessToken, h.clientID)
+	userData, err := GetUserData(utils.Tokens{
+		AccessToken:  string(token.AccessToken),
+		RefreshToken: token.RefreshToken,
+	}, h.clientID)
 	if err != nil {
 		logger.Log.Error(err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -153,7 +154,11 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 	userAuthToken := GenerateRandomState()
 	utils.SetAuthCookie(w, r, userAuthToken)
 
-	if err := h.storage.SessionStore.CreateSession(user.ID, userAuthToken, time.Now().Add(time.Hour*24*30)); err != nil {
+	if err := h.storage.SessionStore.CreateSession(
+		user.ID,
+		utils.HashToken(userAuthToken),
+		time.Now().Add(time.Hour*24*30),
+	); err != nil {
 		logger.Log.Error(err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -170,35 +175,4 @@ func GenerateRandomState() string {
 	rand.Read(byt)
 	str := hex.EncodeToString(byt)
 	return str
-}
-
-type UpdatedToken struct {
-	AccessToken  string   `json:"access_token"`
-	RefreshToken string   `json:"refresh_token"`
-	Scope        []string `json:"scope"`
-	TokenType    string   `json:"token_type"`
-}
-
-func RefreshAccessUserToken(clientID string, clientSecret string, refreshToken string) (accessToken string, refresh_token string, err error) {
-	form := url.Values{
-		"client_id":     {clientID},
-		"client_secret": {clientSecret},
-		"grant_type":    {"refresh_token"},
-		"refresh_token": {refreshToken},
-	}
-
-	req, err := http.PostForm("https://id.twitch.tv/oauth2/token", form)
-	if err != nil {
-		logger.Log.Error(err)
-		return "", "", err
-	}
-
-	jsonDecoder := json.NewDecoder(req.Body)
-	var token UpdatedToken
-	err = jsonDecoder.Decode(&token)
-	if err != nil {
-		logger.Log.Error(err)
-		return "", "", err
-	}
-	return token.AccessToken, token.RefreshToken, nil
 }

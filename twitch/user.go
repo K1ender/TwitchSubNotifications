@@ -6,6 +6,7 @@ import (
 	"time"
 	"twithoauth/logger"
 	"twithoauth/types"
+	"twithoauth/utils"
 )
 
 type User struct {
@@ -22,7 +23,7 @@ type User struct {
 	CreatedAt       time.Time `json:"created_at"`
 }
 
-func GetUserData(accessToken types.UserAccessToken, clientID string) (types.Response[User], error) {
+func GetUserData(tokens utils.Tokens, clientID string) (types.Response[User], error) {
 	var user types.Response[User]
 	req, err := http.NewRequest(http.MethodGet, "https://api.twitch.tv/helix/users", nil)
 	if err != nil {
@@ -30,19 +31,22 @@ func GetUserData(accessToken types.UserAccessToken, clientID string) (types.Resp
 		return user, err
 	}
 
-	req.Header.Add("Authorization", "Bearer "+string(accessToken))
-	req.Header.Add("Client-Id", clientID)
-
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := utils.DFetcher.FetchTwitchApi(
+		req,
+		&utils.Tokens{
+			AccessToken:  tokens.AccessToken,
+			RefreshToken: tokens.RefreshToken,
+		},
+	)
 	if err != nil {
 		logger.Log.Error(err)
 		return user, err
 	}
-
 	err = json.NewDecoder(resp.Body).Decode(&user)
 	if err != nil {
 		logger.Log.Error(err)
 		return user, err
 	}
+
 	return user, nil
 }

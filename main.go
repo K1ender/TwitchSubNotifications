@@ -9,6 +9,7 @@ import (
 	"twithoauth/logger"
 	"twithoauth/storage"
 	"twithoauth/twitch"
+	"twithoauth/utils"
 )
 
 func main() {
@@ -24,6 +25,8 @@ func main() {
 	go twitchClientGrant.UpdateAccessToken()
 
 	storage := storage.NewStorage(db)
+
+	utils.DFetcher = utils.NewFetcher(cfg.Twitch.ClientID, storage.TokenStore)
 
 	var wg sync.WaitGroup
 	wg.Add(1)

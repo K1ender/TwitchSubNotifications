@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 	"twithoauth/logger"
+	"twithoauth/utils"
 )
 
 type ClientCredentials struct {
@@ -36,7 +37,7 @@ func (c *ClientCredentials) GetAccessToken() (AppAccessToken, error) {
 		"client_secret": {c.ClientSecret},
 		"grant_type":    {"client_credentials"},
 	}
-	resp, err := http.PostForm("https://id.twitch.tv/oauth2/token", form)
+	resp, err := http.PostForm(utils.AccessTokenURL, form)
 	if err != nil {
 		logger.Log.Error(err)
 		return "", err
