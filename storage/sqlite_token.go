@@ -3,11 +3,12 @@ package storage
 import (
 	"database/sql"
 	"time"
+	"twithoauth/types"
 )
 
 type TokenStore interface {
 	AddTokens(user_id string, access_token string, refresh_token string, expires_at time.Time) error
-	GetTokens(user_id string) (string, string, error)
+	GetTokens(user_id string) (types.UserAccessToken, string, error)
 	SetTokens(user_id string, access_token string, refresh_token string, expires_at time.Time) error
 }
 
@@ -27,9 +28,9 @@ func (s *SQLiteTokenStore) AddTokens(user_id string, access_token string, refres
 	return err
 }
 
-func (s *SQLiteTokenStore) GetTokens(user_id string) (string, string, error) {
+func (s *SQLiteTokenStore) GetTokens(user_id string) (types.UserAccessToken, string, error) {
 	query := "SELECT access_token, refresh_token FROM tokens WHERE user_id = ?"
-	var access_token string
+	var access_token types.UserAccessToken
 	var refresh_token string
 	err := s.db.QueryRow(query, user_id).Scan(&access_token, &refresh_token)
 	return access_token, refresh_token, err

@@ -2,7 +2,6 @@ package twitch
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"twithoauth/logger"
 	"twithoauth/storage"
 	"twithoauth/types"
+	"twithoauth/utils"
 )
 
 const TwitchAuthURL = "https://id.twitch.tv/oauth2/authorize"
@@ -151,7 +151,7 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	userAuthToken := GenerateRandomState()
-	SetAuthCookie(w, r, userAuthToken)
+	utils.SetAuthCookie(w, r, userAuthToken)
 
 	if err := h.storage.SessionStore.CreateSession(user.ID, userAuthToken, time.Now().Add(time.Hour*24*30)); err != nil {
 		logger.Log.Error(err)
@@ -170,28 +170,6 @@ func GenerateRandomState() string {
 	rand.Read(byt)
 	str := hex.EncodeToString(byt)
 	return str
-}
-
-func HashToken(token string) string {
-	sha256sum := sha256.Sum256([]byte(token))
-	return hex.EncodeToString(sha256sum[:])
-}
-
-func SetAuthCookie(w http.ResponseWriter, r *http.Request, token string) {
-	cookie := &http.Cookie{
-		Name:  "token",
-		Value: HashToken(token),
-		Path:  "/",
-	}
-	http.SetCookie(w, cookie)
-}
-
-func GetAuthCookie(r *http.Request) (string, error) {
-	cookie, err := r.Cookie("token")
-	if err != nil {
-		return "", err
-	}
-	return cookie.Value, nil
 }
 
 type UpdatedToken struct {
