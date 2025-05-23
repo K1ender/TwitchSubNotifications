@@ -2,8 +2,8 @@ package database
 
 import (
 	"database/sql"
-	"twithoauth/config"
-	"twithoauth/logger"
+	"subalertor/config"
+	"subalertor/logger"
 
 	_ "github.com/mattn/go-sqlite3"
 )

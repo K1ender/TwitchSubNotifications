@@ -3,10 +3,10 @@ package twitch
 import (
 	"encoding/json"
 	"net/http"
+	"subalertor/logger"
+	"subalertor/types"
+	"subalertor/utils"
 	"time"
-	"twithoauth/logger"
-	"twithoauth/types"
-	"twithoauth/utils"
 )
 
 type User struct {

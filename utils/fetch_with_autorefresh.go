@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"twithoauth/logger"
-	"twithoauth/storage"
+	"subalertor/logger"
+	"subalertor/storage"
 )
 
 const (

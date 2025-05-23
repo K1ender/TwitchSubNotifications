@@ -1,15 +1,15 @@
 package main
 
 import (
+	"subalertor/api"
+	"subalertor/config"
+	"subalertor/database"
+	"subalertor/eventsub"
+	"subalertor/logger"
+	"subalertor/storage"
+	"subalertor/twitch"
+	"subalertor/utils"
 	"sync"
-	"twithoauth/api"
-	"twithoauth/config"
-	"twithoauth/database"
-	"twithoauth/eventsub"
-	"twithoauth/logger"
-	"twithoauth/storage"
-	"twithoauth/twitch"
-	"twithoauth/utils"
 )
 
 func main() {

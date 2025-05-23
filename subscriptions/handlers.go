@@ -1,8 +1,8 @@
 package subscriptions
 
 import (
-	"twithoauth/storage"
-	"twithoauth/types"
+	"subalertor/storage"
+	"subalertor/types"
 )
 
 type SubscriptionHandler struct {

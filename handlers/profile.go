@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"net/http"
-	"twithoauth/logger"
-	"twithoauth/middleware"
-	"twithoauth/storage"
-	"twithoauth/utils"
+	"subalertor/logger"
+	"subalertor/middleware"
+	"subalertor/storage"
+	"subalertor/utils"
 )
 
 type ProfileHandler struct {

@@ -2,11 +2,11 @@ package api
 
 import (
 	"net/http"
-	"twithoauth/handlers"
-	"twithoauth/logger"
-	"twithoauth/middleware"
-	"twithoauth/storage"
-	"twithoauth/twitch"
+	"subalertor/handlers"
+	"subalertor/logger"
+	"subalertor/middleware"
+	"subalertor/storage"
+	"subalertor/twitch"
 )
 
 func Run(twitchClientGrant *twitch.ClientCredentials, storage *storage.Storage) {

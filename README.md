@@ -1,6 +1,6 @@
-# TwitchSubNotifications
+# SubAlertor
 
-TwitchSubNotifications is a backend service built with Go that handles Twitch subscription event notifications. It supports Twitch OAuth authentication, stores relevant event data in a relational database.
+SubAlertor is a backend service built with Go that handles Twitch subscription event notifications. It supports Twitch OAuth authentication, stores relevant event data in a relational database.
 
 ## Features
 
@@ -25,8 +25,8 @@ go run .
 
 ```bash
 # Apply migrations
-goose -dir migrations postgres "your_connection_string" up
+goose -dir migrations sqlite3 "your_connection_string" up
 
 # Rollback latest
-goose -dir migrations postgres "your_connection_string" down
+goose -dir migrations sqlite3 "your_connection_string" down
 ```

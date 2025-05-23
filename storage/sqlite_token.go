@@ -2,8 +2,8 @@ package storage
 
 import (
 	"database/sql"
+	"subalertor/types"
 	"time"
-	"twithoauth/types"
 )
 
 type TokenStore interface {

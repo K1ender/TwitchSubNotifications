@@ -8,10 +8,10 @@ import (
 	"net/url"
 	"time"
 
-	"twithoauth/logger"
-	"twithoauth/storage"
-	"twithoauth/types"
-	"twithoauth/utils"
+	"subalertor/logger"
+	"subalertor/storage"
+	"subalertor/types"
+	"subalertor/utils"
 )
 
 var states = make(map[string]string)

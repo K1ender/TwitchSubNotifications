@@ -1,4 +1,4 @@
-module twithoauth
+module subalertor
 
 go 1.24.3
 

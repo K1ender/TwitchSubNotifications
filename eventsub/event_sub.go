@@ -1,8 +1,8 @@
 package eventsub
 
 import (
+	"subalertor/logger"
 	"sync"
-	"twithoauth/logger"
 
 	"github.com/gorilla/websocket"
 )

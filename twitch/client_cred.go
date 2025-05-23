@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"subalertor/logger"
+	"subalertor/utils"
 	"time"
-	"twithoauth/logger"
-	"twithoauth/utils"
 )
 
 type ClientCredentials struct {

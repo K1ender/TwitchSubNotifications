@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"twithoauth/logger"
-	"twithoauth/types"
+	"subalertor/logger"
+	"subalertor/types"
 )
 
 type CreateEventSub[T any] struct {
