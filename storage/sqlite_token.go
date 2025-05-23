@@ -24,7 +24,7 @@ func NewSQLiteTokenStore(db *sql.DB) *SQLiteTokenStore {
 
 func (s *SQLiteTokenStore) AddTokens(user_id string, access_token string, refresh_token string, expires_at time.Time) error {
 	query := "INSERT INTO tokens (user_id, access_token, refresh_token, expires_at) VALUES (?, ?, ?, ?)"
-	_, err := s.db.Exec(query, user_id, access_token, refresh_token, expires_at.Unix())
+	_, err := s.db.Exec(query, user_id, access_token, refresh_token, time.Now().Add(time.Duration(expires_at.Unix())*time.Second).Unix())
 	return err
 }
 
@@ -38,6 +38,6 @@ func (s *SQLiteTokenStore) GetTokens(user_id string) (types.UserAccessToken, str
 
 func (s *SQLiteTokenStore) SetTokens(user_id string, access_token string, refresh_token string, expires_at time.Time) error {
 	query := "UPDATE tokens SET access_token = ?, refresh_token = ?, expires_at = ? WHERE user_id = ?"
-	_, err := s.db.Exec(query, access_token, refresh_token, expires_at.Unix(), user_id)
+	_, err := s.db.Exec(query, access_token, refresh_token, time.Now().Add(time.Duration(expires_at.Unix())*time.Second).Unix(), user_id)
 	return err
 }
