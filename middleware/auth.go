@@ -19,19 +19,19 @@ func AuthMiddleware(store *storage.Storage) func(next http.Handler) http.Handler
 			cookie, err := utils.GetAuthCookie(r)
 			if err != nil {
 				logger.Log.Error(err)
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				utils.Unauthorized(w)
 				return
 			}
 
 			session, err := store.SessionStore.FindSession(utils.HashToken(cookie))
 			if err != nil {
 				logger.Log.Error(err)
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				utils.Unauthorized(w)
 				return
 			}
 			if time.Now().Unix() > int64(session.ExpiresAt) {
 				logger.Log.Error(err)
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				utils.Unauthorized(w)
 				return
 			}
 
@@ -39,7 +39,7 @@ func AuthMiddleware(store *storage.Storage) func(next http.Handler) http.Handler
 				_, err := store.SessionStore.ExtendSession(utils.HashToken(cookie), time.Now().Add(time.Hour*24*15))
 				if err != nil {
 					logger.Log.Error(err)
-					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					utils.Unauthorized(w)
 					return
 				}
 				utils.ExtendAuthCookie(w, r, cookie)
@@ -48,7 +48,7 @@ func AuthMiddleware(store *storage.Storage) func(next http.Handler) http.Handler
 			user, err := store.UserStore.FindUserByID(session.UserID)
 			if err != nil {
 				logger.Log.Error(err)
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				utils.Unauthorized(w)
 				return
 			}
 

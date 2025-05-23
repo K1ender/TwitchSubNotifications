@@ -36,7 +36,7 @@ func (h *TwitchHandlers) AuthorizeHandler(w http.ResponseWriter, r *http.Request
 	url, err := url.Parse(utils.AuthorizeURL)
 	if err != nil {
 		logger.Log.Error(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.InternalServerError(w)
 		return
 	}
 
@@ -67,7 +67,7 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 	state := r.URL.Query().Get("state")
 	if state == "" || states[state] != state {
 		logger.Log.Error("Invalid state")
-		http.Error(w, "Invalid state", http.StatusBadRequest)
+		utils.BadRequest(w, "Invalid state")
 		return
 	}
 
@@ -82,7 +82,7 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 	req, err := http.PostForm(utils.AccessTokenURL, form)
 	if err != nil {
 		logger.Log.Error(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.InternalServerError(w)
 		return
 	}
 
@@ -91,7 +91,7 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 	err = jsonDecoder.Decode(&token)
 	if err != nil {
 		logger.Log.Error(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.InternalServerError(w)
 		return
 	}
 
@@ -105,7 +105,7 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 	}, h.clientID)
 	if err != nil {
 		logger.Log.Error(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.InternalServerError(w)
 		return
 	}
 	userID := userData.Data[0].ID
@@ -119,7 +119,7 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 			user, err = h.storage.UserStore.FindUserByID(userID)
 			if err != nil {
 				logger.Log.Error(err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				utils.InternalServerError(w)
 				return
 			}
 			err = h.storage.TokenStore.SetTokens(
@@ -130,12 +130,12 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 			)
 			if err != nil {
 				logger.Log.Error(err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				utils.InternalServerError(w)
 				return
 			}
 		} else {
 			logger.Log.Error(err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			utils.InternalServerError(w)
 			return
 		}
 	} else {
@@ -146,7 +146,7 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 			time.Unix(token.ExpiresIn, 0),
 		); err != nil {
 			logger.Log.Error(err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			utils.InternalServerError(w)
 			return
 		}
 	}
@@ -160,7 +160,7 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 		time.Now().Add(time.Hour*24*30),
 	); err != nil {
 		logger.Log.Error(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.InternalServerError(w)
 		return
 	}
 
