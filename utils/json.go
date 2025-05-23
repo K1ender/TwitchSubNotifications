@@ -37,3 +37,11 @@ func Unauthorized(w http.ResponseWriter) {
 		Message: "Unauthorized",
 	})
 }
+
+func OK(w http.ResponseWriter, data any) {
+	WriteJSON(w, http.StatusOK, Response{
+		Success: true,
+		Message: "Success",
+		Data:    data,
+	})
+}

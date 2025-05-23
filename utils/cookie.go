@@ -8,20 +8,26 @@ import (
 
 func SetAuthCookie(w http.ResponseWriter, r *http.Request, token string) {
 	cookie := &http.Cookie{
-		Name:   "token",
-		Value:  token,
-		Path:   "/",
-		MaxAge: 60 * 60 * 24 * 30,
+		Name:     "token",
+		Value:    token,
+		Path:     "/",
+		MaxAge:   60 * 60 * 24 * 30,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, cookie)
 }
 
 func ExtendAuthCookie(w http.ResponseWriter, r *http.Request, token string) {
 	cookie := &http.Cookie{
-		Name:   "token",
-		Value:  token,
-		Path:   "/",
-		MaxAge: 60 * 60 * 24 * 30,
+		Name:     "token",
+		Value:    token,
+		Path:     "/",
+		MaxAge:   60 * 60 * 24 * 30,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, cookie)
 }

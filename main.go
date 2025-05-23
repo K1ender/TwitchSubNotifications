@@ -32,7 +32,7 @@ func main() {
 	wg.Add(1)
 
 	go eventsub.EventSubHandler(&wg)
-	go api.Run(twitchClientGrant, storage)
+	go api.Run(twitchClientGrant, storage, &cfg)
 
 	wg.Wait()
 	events, err := storage.EventSubStore.GetAllEventSubscriptions()

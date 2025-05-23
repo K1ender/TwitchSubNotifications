@@ -3,8 +3,9 @@ package config
 import "github.com/ilyakaznacheev/cleanenv"
 
 type Config struct {
-	Twitch   TwitchConfig
-	Database DatabaseConfig
+	Twitch      TwitchConfig
+	Database    DatabaseConfig
+	FrontEndURL string `env:"FRONTEND_URL" env-required:"true"`
 }
 
 type TwitchConfig struct {

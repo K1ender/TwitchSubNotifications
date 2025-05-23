@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"subalertor/config"
 	"subalertor/logger"
 	"subalertor/storage"
 	"subalertor/types"
@@ -20,15 +21,17 @@ type TwitchHandlers struct {
 	clientID     string
 	clientSecret string
 	storage      *storage.Storage
+	cfg          *config.Config
 }
 
 const scopes = "user:read:email moderator:read:followers"
 
-func NewTwitchHandlers(clientID string, clientSecret string, storage *storage.Storage) *TwitchHandlers {
+func NewTwitchHandlers(clientID string, clientSecret string, storage *storage.Storage, cfg *config.Config) *TwitchHandlers {
 	return &TwitchHandlers{
 		clientID:     clientID,
 		clientSecret: clientSecret,
 		storage:      storage,
+		cfg:          cfg,
 	}
 }
 
@@ -45,7 +48,7 @@ func (h *TwitchHandlers) AuthorizeHandler(w http.ResponseWriter, r *http.Request
 
 	query := url.Query()
 	query.Set("client_id", h.clientID)
-	query.Set("redirect_uri", "http://localhost:8080/callback")
+	query.Set("redirect_uri", h.cfg.FrontEndURL+"/callback")
 	query.Set("response_type", "code")
 	query.Set("scope", scopes)
 	query.Set("state", state)
@@ -76,17 +79,24 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 		"client_secret": {h.clientSecret},
 		"code":          {code},
 		"grant_type":    {"authorization_code"},
-		"redirect_uri":  {"http://localhost:8080/callback"},
+		"redirect_uri":  {"http://localhost:5173/callback"},
 	}
 
-	req, err := http.PostForm(utils.AccessTokenURL, form)
+	res, err := http.PostForm(utils.AccessTokenURL, form)
 	if err != nil {
 		logger.Log.Error(err)
 		utils.InternalServerError(w)
 		return
 	}
+	defer res.Body.Close()
 
-	jsonDecoder := json.NewDecoder(req.Body)
+	if res.StatusCode != http.StatusOK {
+		logger.Log.Error("Failed to get access token")
+		utils.InternalServerError(w)
+		return
+	}
+
+	jsonDecoder := json.NewDecoder(res.Body)
 	var token UserAccessTokenResponse
 	err = jsonDecoder.Decode(&token)
 	if err != nil {
@@ -167,7 +177,7 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 	delete(states, state)
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+	utils.OK(w, user.Username)
 }
 
 func GenerateRandomState() string {
