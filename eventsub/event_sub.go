@@ -1,7 +1,6 @@
 package eventsub
 
 import (
-	"sync"
 	"twithoauth/logger"
 
 	"github.com/gorilla/websocket"
@@ -11,7 +10,7 @@ var SessionID SessionIDType
 
 type SessionIDType string
 
-func EventSubHandler(wg *sync.WaitGroup) {
+func EventSubHandler() {
 	ws, _, err := websocket.DefaultDialer.Dial("wss://eventsub.wss.twitch.tv/ws", nil)
 	if err != nil {
 		panic(err)
@@ -22,7 +21,7 @@ func EventSubHandler(wg *sync.WaitGroup) {
 		err := ws.ReadJSON(&twitchMessage)
 		if err != nil {
 			logger.Log.Error(err)
-			continue
+			break
 		}
 
 		if twitchMessage.Metadata.MessageType == WelcomeMessageType {
@@ -44,7 +43,6 @@ func EventSubHandler(wg *sync.WaitGroup) {
 			logger.Log.
 				WithField("sessionID", SessionID).
 				Info("✅ Connected to Twitch Eventsub API")
-			wg.Done()
 		} else if twitchMessage.Metadata.MessageType == KeepAliveMessageType {
 
 		} else if twitchMessage.Metadata.MessageType == NotificationMessageType {

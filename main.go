@@ -1,15 +1,18 @@
 package main
 
 import (
-	"sync"
 	"twithoauth/api"
 	"twithoauth/config"
+	"twithoauth/database"
 	"twithoauth/eventsub"
+	"twithoauth/storage"
 	"twithoauth/twitch"
 )
 
 func main() {
 	cfg := config.MustInit()
+
+	db := database.MustInit(&cfg)
 
 	twitchClientGrant := twitch.NewClientCredentials(
 		cfg.Twitch.ClientID,
@@ -18,13 +21,11 @@ func main() {
 	twitchClientGrant.GetAccessToken()
 	go twitchClientGrant.UpdateAccessToken()
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	wg.Add(1)
-	go eventsub.EventSubHandler(&wg)
-	go api.Run(&wg, twitchClientGrant)
+	storage := storage.NewStorage(db)
 
-	wg.Wait()
+	go eventsub.EventSubHandler()
+	go api.Run(twitchClientGrant, storage)
+
 	select {}
 
 }
