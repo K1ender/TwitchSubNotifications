@@ -18,14 +18,14 @@ export const useUserStore = defineStore("user", () => {
 
   const logout = async () => {
     try {
-      user.value = null;
-      isAuthorized.value = false;
       isLoading.value = true;
       await ky
         .get(import.meta.env.VITE_API_ENDPOINT + "/logout", {
           credentials: "include",
         })
         .json();
+      user.value = null;
+      isAuthorized.value = false;
     } catch (e) {
       console.error(e);
     } finally {

@@ -18,7 +18,7 @@ onMounted(() => {
 
 async function logout() {
     await store.logout();
-    router.push("/");
+    await router.push("/");
 }
 </script>
 
@@ -34,7 +34,8 @@ async function logout() {
                     </CardContent>
                 </Card>
             </div>
-            <Button class="mt-4 cursor-pointer" variant="destructive" @click="logout">Logout</Button>
+            <Button v-if="store.isLoading" class="mt-4 cursor-pointer" variant="destructive">Loading...</Button>
+            <Button v-else class="mt-4 cursor-pointer" variant="destructive" @click="logout">Logout</Button>
         </div>
     </div>
 </template>
