@@ -73,6 +73,13 @@ func (f *Fetcher) RefreshAccessUserToken(refreshToken string) (accessToken strin
 		logger.Log.Error(err)
 		return "", "", err
 	}
+
+	err = f.TokenStorage.UpdateAccessToken(token.RefreshToken, token.AccessToken)
+	if err != nil {
+		logger.Log.Error(err)
+		return "", "", err
+	}
+
 	return token.AccessToken, token.RefreshToken, nil
 }
 

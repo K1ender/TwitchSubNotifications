@@ -7,9 +7,10 @@ import (
 )
 
 type TokenStore interface {
-	AddTokens(user_id string, access_token string, refresh_token string, expires_at time.Time) error
+	AddTokens(user_id, access_token, refresh_token string, expires_at time.Time) error
 	GetTokens(user_id string) (types.UserAccessToken, string, error)
-	SetTokens(user_id string, access_token string, refresh_token string, expires_at time.Time) error
+	SetTokens(user_id, access_token, refresh_token string, expires_at time.Time) error
+	UpdateAccessToken(refreshToken, access_token string) error
 }
 
 type SQLiteTokenStore struct {
@@ -39,5 +40,11 @@ func (s *SQLiteTokenStore) GetTokens(user_id string) (types.UserAccessToken, str
 func (s *SQLiteTokenStore) SetTokens(user_id string, access_token string, refresh_token string, expires_at time.Time) error {
 	query := "UPDATE tokens SET access_token = ?, refresh_token = ?, expires_at = ? WHERE user_id = ?"
 	_, err := s.db.Exec(query, access_token, refresh_token, time.Now().Add(time.Duration(expires_at.Unix())*time.Second).Unix(), user_id)
+	return err
+}
+
+func (s *SQLiteTokenStore) UpdateAccessToken(refreshToken string, access_token string) error {
+	query := "UPDATE tokens SET access_token = ? WHERE refresh_token = ?"
+	_, err := s.db.Exec(query, access_token, refreshToken)
 	return err
 }
