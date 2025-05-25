@@ -25,18 +25,11 @@ type User struct {
 
 func GetUserData(tokens utils.Tokens, clientID string) (types.Response[User], error) {
 	var user types.Response[User]
-	req, err := http.NewRequest(http.MethodGet, "https://api.twitch.tv/helix/users", nil)
-	if err != nil {
-		logger.Log.Error(err)
-		return user, err
-	}
-
 	resp, err := utils.DFetcher.FetchTwitchApi(
-		req,
-		&utils.Tokens{
-			AccessToken:  tokens.AccessToken,
-			RefreshToken: tokens.RefreshToken,
-		},
+		"https://api.twitch.tv/helix/users",
+		http.MethodGet,
+		nil,
+		&tokens,
 	)
 	if err != nil {
 		logger.Log.Error(err)

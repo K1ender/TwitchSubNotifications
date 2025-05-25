@@ -24,8 +24,6 @@ type TwitchHandlers struct {
 	cfg          *config.Config
 }
 
-const scopes = "user:read:email moderator:read:followers"
-
 func NewTwitchHandlers(clientID string, clientSecret string, storage *storage.Storage, cfg *config.Config) *TwitchHandlers {
 	return &TwitchHandlers{
 		clientID:     clientID,
@@ -50,7 +48,7 @@ func (h *TwitchHandlers) AuthorizeHandler(w http.ResponseWriter, r *http.Request
 	query.Set("client_id", h.clientID)
 	query.Set("redirect_uri", h.cfg.FrontEndURL+"/callback")
 	query.Set("response_type", "code")
-	query.Set("scope", scopes)
+	query.Set("scope", config.Scopes)
 	query.Set("state", state)
 	url.RawQuery = query.Encode()
 
@@ -176,7 +174,6 @@ func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request)
 
 	delete(states, state)
 
-	w.WriteHeader(http.StatusOK)
 	utils.OK(w, user.Username)
 }
 

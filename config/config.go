@@ -2,6 +2,8 @@ package config
 
 import "github.com/ilyakaznacheev/cleanenv"
 
+const Scopes = "user:read:email moderator:read:followers"
+
 type Config struct {
 	Twitch      TwitchConfig
 	Database    DatabaseConfig

@@ -2,11 +2,10 @@ package eventsub
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"subalertor/logger"
-	"subalertor/types"
+	"subalertor/utils"
 )
 
 type CreateEventSub[T any] struct {
@@ -28,7 +27,7 @@ type ChannelFollowSubscription struct {
 
 func SubscribeChannelFollow(
 	broadcasterID string,
-	token types.UserAccessToken,
+	tokens utils.Tokens,
 	clientID string,
 ) error {
 	body := CreateEventSub[ChannelFollowSubscription]{
@@ -49,21 +48,23 @@ func SubscribeChannelFollow(
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, "https://api.twitch.tv/helix/eventsub/subscriptions", bytes.NewReader(data))
+	logger.Log.WithField("json_body", string(data)).Debug("Prepared JSON")
+
+	res, err := utils.DFetcher.FetchTwitchApi(
+		"https://api.twitch.tv/helix/eventsub/subscriptions",
+		http.MethodPost,
+		data,
+		&utils.Tokens{
+			AccessToken:  tokens.AccessToken,
+			RefreshToken: tokens.RefreshToken,
+		},
+	)
 	if err != nil {
 		logger.Log.Error(err)
 		return err
 	}
 
-	req.Header.Add("Authorization", "Bearer "+string(token))
-	req.Header.Add("Client-Id", clientID)
-	req.Header.Add("Content-Type", "application/json")
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		logger.Log.Error(err)
-		return err
-	}
+	defer res.Body.Close()
 
 	if res.StatusCode != 200 && res.StatusCode != 202 {
 		response, _ := bufio.NewReader(res.Body).ReadString('\n')

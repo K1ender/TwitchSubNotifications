@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
+	"subalertor/config"
 	"subalertor/logger"
 	"subalertor/storage"
 )
@@ -27,10 +30,11 @@ type Fetcher struct {
 	TokenStorage storage.TokenStore
 }
 
-func NewFetcher(clientID string, tokenStorage storage.TokenStore) *Fetcher {
+func NewFetcher(clientID string, clientSecret string, tokenStorage storage.TokenStore) *Fetcher {
 	return &Fetcher{
 		ClientID:     clientID,
 		TokenStorage: tokenStorage,
+		ClientSecret: clientSecret,
 	}
 }
 
@@ -47,15 +51,22 @@ func (f *Fetcher) RefreshAccessUserToken(refreshToken string) (accessToken strin
 		"client_secret": {f.ClientSecret},
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {refreshToken},
+		"scopes":        {config.Scopes},
 	}
 
-	req, err := http.PostForm(AccessTokenURL, form)
+	res, err := http.PostForm(AccessTokenURL, form)
 	if err != nil {
 		logger.Log.Error(err)
 		return "", "", err
 	}
+	defer res.Body.Close()
 
-	jsonDecoder := json.NewDecoder(req.Body)
+	if res.StatusCode != 200 {
+		logger.Log.Error("Failed to refresh access token")
+		return "", "", fmt.Errorf("failed to refresh access token")
+	}
+
+	jsonDecoder := json.NewDecoder(res.Body)
 	var token UpdatedToken
 	err = jsonDecoder.Decode(&token)
 	if err != nil {
@@ -65,16 +76,31 @@ func (f *Fetcher) RefreshAccessUserToken(refreshToken string) (accessToken strin
 	return token.AccessToken, token.RefreshToken, nil
 }
 
-func (f *Fetcher) FetchTwitchApi(req *http.Request, tokens *Tokens) (*http.Response, error) {
-	req.Header.Add("Client-Id", f.ClientID)
-	req.Header.Add("Authorization", "Bearer "+tokens.AccessToken)
-	res, err := http.DefaultClient.Do(req)
+func (f *Fetcher) FetchTwitchApi(url string, method string, body []byte, tokens *Tokens) (*http.Response, error) {
+	makeRequest := func(token string) (*http.Response, error) {
+		req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Client-Id", f.ClientID)
+		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/json")
+		return http.DefaultClient.Do(req)
+	}
+
+	res, err := makeRequest(tokens.AccessToken)
 	if err != nil {
-		logger.Log.Error(err)
 		return nil, err
 	}
 
+	if res.StatusCode == 400 {
+		logger.Log.Error("Bad request")
+		return nil, fmt.Errorf("bad request")
+	}
+
 	if res.StatusCode == 401 {
+		logger.Log.Debug("Access token expired. Refreshing...")
 		accessToken, refreshToken, err := f.RefreshAccessUserToken(tokens.RefreshToken)
 		if err != nil {
 			logger.Log.Error(err)
@@ -82,8 +108,7 @@ func (f *Fetcher) FetchTwitchApi(req *http.Request, tokens *Tokens) (*http.Respo
 		}
 		tokens.AccessToken = accessToken
 		tokens.RefreshToken = refreshToken
-		req.Header.Set("Authorization", "Bearer "+tokens.AccessToken)
-		return f.FetchTwitchApi(req, tokens)
+		return makeRequest(tokens.AccessToken)
 	}
 
 	return res, nil

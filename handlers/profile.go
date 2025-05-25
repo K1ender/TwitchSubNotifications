@@ -44,5 +44,8 @@ func (h *ProfileHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	h.store.SessionStore.DeleteSession(utils.HashToken(token))
 	utils.DeleteAuthCookie(w, r)
 
-	w.WriteHeader(http.StatusOK)
+	utils.WriteJSON(w, http.StatusOK, utils.Response{
+		Success: true,
+		Message: "Success",
+	})
 }

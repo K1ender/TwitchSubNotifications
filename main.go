@@ -26,7 +26,11 @@ func main() {
 
 	storage := storage.NewStorage(db)
 
-	utils.DFetcher = utils.NewFetcher(cfg.Twitch.ClientID, storage.TokenStore)
+	utils.DFetcher = utils.NewFetcher(
+		cfg.Twitch.ClientID,
+		cfg.Twitch.ClientSecret,
+		storage.TokenStore,
+	)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -48,14 +52,17 @@ func main() {
 				continue
 			}
 
-			accessToken, _, err := storage.TokenStore.GetTokens(*userID)
+			accessToken, refreshToken, err := storage.TokenStore.GetTokens(*userID)
 			if err != nil {
 				continue
 			}
 
 			eventsub.SubscribeChannelFollow(
 				*event.Condition.BroadcasterID,
-				accessToken,
+				utils.Tokens{
+					AccessToken:  string(accessToken),
+					RefreshToken: refreshToken,
+				},
 				twitchClientGrant.ClientID,
 			)
 			logger.Log.Info("Subscribed to channel follow")
