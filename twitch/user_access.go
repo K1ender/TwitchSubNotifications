@@ -17,15 +17,15 @@ import (
 
 var states = make(map[string]string)
 
-type TwitchHandlers struct {
+type Handlers struct {
 	clientID     string
 	clientSecret string
 	storage      *storage.Storage
 	cfg          *config.Config
 }
 
-func NewTwitchHandlers(clientID string, clientSecret string, storage *storage.Storage, cfg *config.Config) *TwitchHandlers {
-	return &TwitchHandlers{
+func NewTwitchHandlers(clientID string, clientSecret string, storage *storage.Storage, cfg *config.Config) *Handlers {
+	return &Handlers{
 		clientID:     clientID,
 		clientSecret: clientSecret,
 		storage:      storage,
@@ -33,7 +33,7 @@ func NewTwitchHandlers(clientID string, clientSecret string, storage *storage.St
 	}
 }
 
-func (h *TwitchHandlers) AuthorizeHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) AuthorizeHandler(w http.ResponseWriter, r *http.Request) {
 	url, err := url.Parse(utils.AuthorizeURL)
 	if err != nil {
 		logger.Log.Error(err)
@@ -63,7 +63,7 @@ type UserAccessTokenResponse struct {
 	TokenType    string                `json:"token_type"`
 }
 
-func (h *TwitchHandlers) CallbackHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	state := r.URL.Query().Get("state")
 	if state == "" || states[state] != state {

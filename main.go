@@ -21,7 +21,10 @@ func main() {
 		cfg.Twitch.ClientID,
 		cfg.Twitch.ClientSecret,
 	)
-	twitchClientGrant.GetAccessToken()
+	_, err := twitchClientGrant.GetAccessToken()
+	if err != nil {
+		logger.Log.Fatal(err)
+	}
 	go twitchClientGrant.UpdateAccessToken()
 
 	storage := storage.NewStorage(db)

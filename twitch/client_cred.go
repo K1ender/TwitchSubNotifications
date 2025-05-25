@@ -66,6 +66,9 @@ func (c *ClientCredentials) GetBearerToken() string {
 func (c *ClientCredentials) UpdateAccessToken() {
 	for {
 		time.Sleep(time.Duration(c.ExpiresIn-60) * time.Second)
-		c.GetAccessToken()
+		_, err := c.GetAccessToken()
+		if err != nil {
+			logger.Log.Error(err)
+		}
 	}
 }

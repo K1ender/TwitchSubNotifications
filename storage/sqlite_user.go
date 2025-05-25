@@ -39,8 +39,9 @@ func (s *SQLiteUserStore) CreateUser(id, username string) (UserModel, error) {
 
 	err := s.db.QueryRow(query, id, username).Scan(&user.ID, &user.Username)
 	if err != nil {
-		if sqliteErr, ok := err.(sqlite3.Error); ok {
-			if sqliteErr.Code == sqlite3.ErrConstraint {
+		var sqliteErr sqlite3.Error
+		if errors.As(err, &sqliteErr) {
+			if errors.Is(sqliteErr.Code, sqlite3.ErrConstraint) {
 				return user, ErrUserAlreadyExists
 			}
 		}

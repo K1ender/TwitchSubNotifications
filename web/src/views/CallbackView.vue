@@ -3,11 +3,11 @@ import { useUserStore } from '@/store/UserStore';
 import ky from 'ky';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-const err = ref('Loading...');
+const err = ref<"loading" | string>('loading');
 
 const router = useRouter()
 
-const { getProfile } = useUserStore();
+const store = useUserStore();
 
 onMounted(async () => {
     const url = new URL(window.location.href);
@@ -20,7 +20,7 @@ onMounted(async () => {
         url.searchParams.set('scope', scope);
         url.searchParams.set('state', state);
         const res = await ky.get(url.toString(), { credentials: 'include' });
-        await getProfile();
+        await store.getProfile();
         if (res.ok) {
             router.push("/dashboard")
         } else {
@@ -32,5 +32,10 @@ onMounted(async () => {
 </script>
 
 <template>
-    <p>{{ err }}</p>
+    <div class="flex items-center justify-center h-screen w-full">
+        <div v-if="err === 'loading'"
+            class="w-8 h-8 border-2 border-gray-200 border-t-gray-800 rounded-full animate-spin">
+        </div>
+        <p v-else>{{ err }}</p>
+    </div>
 </template>
