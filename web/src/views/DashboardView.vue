@@ -2,9 +2,14 @@
 import Button from '@/components/ui/button/Button.vue';
 import Card from '@/components/ui/card/Card.vue';
 import CardContent from '@/components/ui/card/CardContent.vue';
+import CardDescription from '@/components/ui/card/CardDescription.vue';
 import CardHeader from '@/components/ui/card/CardHeader.vue';
+import CardTitle from '@/components/ui/card/CardTitle.vue';
 import { useUserStore } from '@/store/UserStore';
-import { onMounted } from 'vue';
+import ky from 'ky';
+import { Users, TrendingUp, UserPlus, LogOut, Image } from 'lucide-vue-next'
+import { AnimatePresence, motion } from 'motion-v';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const store = useUserStore();
@@ -20,22 +25,145 @@ async function logout() {
     await store.logout();
     await router.push("/");
 }
+
+const totalFollowers = ref(0);
+const newFollowersThisWeek = ref(0);
+const followingBack = ref(0);
+
+const followers = ref<{
+    id: number,
+    displayName: string,
+    avatar: string,
+    followedAt: string
+}[]>([]);
+const limit = ref(10);
+const offset = ref(0);
+onMounted(async () => {
+    let res = await ky.get(import.meta.env.VITE_API_ENDPOINT + `/followers?limit=${limit.value}&offset=${offset.value}`, {
+        credentials: 'include'
+    });
+    if (res.ok) {
+        const data = await res.json();
+        console.log(data);
+
+        // totalFollowers.value = data.totalFollowers;
+        // newFollowersThisWeek.value = data.newFollowersThisWeek;
+        // followingBack.value = data.followingBack;
+        // followers.value = data.followers;
+    }
+})
 </script>
 
 <template>
-    <div class="flex items-center justify-center pt-10">
-        <div class="flex flex-col container mx-6">
-            <h1 class="text-4xl">{{ store.user?.username }}</h1>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 my-4">
-                <Card class="w-full">
-                    <CardHeader>Follower notifications</CardHeader>
+    <div class="min-h-screen bg-background p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between ">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight">
+                    Followers
+                </h1>
+                <p class="text-muted-foreground">
+                    Manage and view your follower community
+                </p>
+            </div>
+            <div>
+                <Button @click="logout" variant="outline" class="flex items-center gap-2">
+                    <LogOut class="h-4 w-4" />
+                    Logout
+                </Button>
+            </div>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-3">
+            <div>
+                <Card class="hover:shadow-lg transition-shadow duration-300">
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle class="text-sm font-medium">Total Followers</CardTitle>
+                        <motion.div :while-hover="{ scale: 1.1, rotate: 5 }"
+                            :transition="{ type: 'spring', stiffness: 400, damping: 10 }">
+                            <Users class="h-4 w-4 text-muted-foreground" />
+                        </motion.div>
+                    </CardHeader>
                     <CardContent>
-                        <Button variant="secondary">Enable</Button>
+                        <div class="text-2xl font-bold">
+                            {{ totalFollowers.toLocaleString() }}
+                        </div>
+                        <p class="text-xs text-muted-foreground">+{{ newFollowersThisWeek }} this week</p>
                     </CardContent>
                 </Card>
             </div>
-            <Button v-if="store.isLoading" class="mt-4 cursor-pointer" variant="destructive">Loading...</Button>
-            <Button v-else class="mt-4 cursor-pointer" variant="destructive" @click="logout">Logout</Button>
+
+            <div>
+                <Card class="hover:shadow-lg transition-shadow duration-300">
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle class="text-sm font-medium">New This Week</CardTitle>
+                        <motion.div :while-hover="{ scale: 1.1, rotate: 5 }"
+                            :transition="{ type: 'spring', stiffness: 400, damping: 10 }">
+                            <TrendingUp class="h-4 w-4 text-muted-foreground" />
+                        </motion.div>
+                    </CardHeader>
+                    <CardContent>
+                        <div class="text-2xl font-bold">
+                            {{ newFollowersThisWeek }}
+                        </div>
+                        <p class="text-xs text-muted-foreground">+12% from last week</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div>
+                <Card class="hover:shadow-lg transition-shadow duration-300">
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle class="text-sm font-medium">Following Back</CardTitle>
+                        <motion.div :while-hover="{ scale: 1.1, rotate: 5 }"
+                            :transition="{ type: 'spring', stiffness: 400, damping: 10 }">
+                            <UserPlus class="h-4 w-4 text-muted-foreground" />
+                        </motion.div>
+                    </CardHeader>
+                    <CardContent>
+                        <div class="text-2xl font-bold">
+                            {{ followingBack }}
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            {{ Math.round((followingBack / totalFollowers) * 100) }}% of followers
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Follower List</CardTitle>
+                <CardDescription>View and manage your followers</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <motion.div class="mt-6 space-y-4" layout>
+                    <AnimatePresence mode="popLayout">
+                        <motion.div v-for="(follower, index) in followers" layout :key="follower.id"
+                            class="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                            <div className="flex items-center gap-4">
+                                <div>
+                                    <img :src="follower.avatar || 'https://placehold.co/40x40'"
+                                        :alt="follower.displayName" width="40" height="40" class="rounded-full" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <p class="font-medium truncate">{{ follower.displayName }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <p class="text-xs text-muted-foreground">
+                                    {{ follower.followedAt }}
+                                </p>
+                                <motion.div :while-hover="{ scale: 1.1, rotate: 5 }"
+                                    :transition="{ type: 'spring', stiffness: 400, damping: 10 }">
+                                    <Image class="h-4 w-4 text-muted-foreground" />
+                                </motion.div>
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
+                </motion.div>
+            </CardContent>
+        </Card>
     </div>
 </template>

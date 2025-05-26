@@ -7,6 +7,7 @@ type Storage struct {
 	SessionStore  SessionStore
 	TokenStore    TokenStore
 	EventSubStore EventSubStore
+	FollowerStore FollowerStore
 }
 
 func NewStorage(db *sql.DB) *Storage {
@@ -15,5 +16,6 @@ func NewStorage(db *sql.DB) *Storage {
 		SessionStore:  NewSQLiteSessionStore(db),
 		TokenStore:    NewSQLiteTokenStore(db),
 		EventSubStore: NewSQLiteEventSubStore(db),
+		FollowerStore: NewSQLiteFollowersStore(db),
 	}
 }

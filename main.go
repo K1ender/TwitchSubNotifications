@@ -38,7 +38,7 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	go eventsub.EventSubHandler(&wg)
+	go eventsub.EventSubHandler(&wg, storage)
 	go api.Run(twitchClientGrant, storage, &cfg)
 
 	wg.Wait()

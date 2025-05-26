@@ -25,6 +25,8 @@ func Run(twitchClientGrant *twitch.ClientCredentials, storage *storage.Storage, 
 	mux.Handle("GET /profile", authMiddleware(http.HandlerFunc(profileHandler.GetProfile)))
 	mux.Handle("GET /logout", authMiddleware(http.HandlerFunc(profileHandler.LogoutHandler)))
 
+	mux.Handle("GET /followers", authMiddleware(http.HandlerFunc(profileHandler.GetLatestFollowers)))
+
 	wrapped := middleware.Use(mux, corsMiddleware)
 
 	if err := http.ListenAndServe(":8080", wrapped); err != nil {

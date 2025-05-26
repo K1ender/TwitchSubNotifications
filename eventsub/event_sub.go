@@ -2,7 +2,9 @@ package eventsub
 
 import (
 	"subalertor/logger"
+	"subalertor/storage"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -11,7 +13,7 @@ var SessionID SessionIDType
 
 type SessionIDType string
 
-func EventSubHandler(wg *sync.WaitGroup) {
+func EventSubHandler(wg *sync.WaitGroup, store *storage.Storage) {
 	ws, _, err := websocket.DefaultDialer.Dial("wss://eventsub.wss.twitch.tv/ws", nil)
 	if err != nil {
 		panic(err)
@@ -53,8 +55,19 @@ func EventSubHandler(wg *sync.WaitGroup) {
 			event := twitchMessage.Payload["event"].(map[string]any)
 
 			if subscriptionType == "channel.follow" {
-				username := event["user_name"].(string)
-				// user_id := event["user_id"].(string)
+				display_username := event["user_name"].(string)
+				username := event["user_login"].(string)
+				user_id := event["user_id"].(string)
+				broadcaster_id := event["broadcaster_user_id"].(string)
+				store.FollowerStore.AddFollower(
+					broadcaster_id,
+					storage.FollowerModel{
+						ID:          user_id,
+						DisplayName: display_username,
+						Username:    username,
+						FollowedAt:  int(time.Now().Unix()),
+					},
+				)
 				logger.Log.
 					WithField("username", username).
 					Info("New follower")
