@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -86,7 +87,12 @@ func (h *Handlers) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		utils.InternalServerError(w)
 		return
 	}
-	defer res.Body.Close()
+	defer func(body io.ReadCloser) {
+		err := body.Close()
+		if err != nil {
+			logger.Log.Error(err)
+		}
+	}(res.Body)
 
 	if res.StatusCode != http.StatusOK {
 		logger.Log.Error("Failed to get access token")
@@ -179,7 +185,10 @@ func (h *Handlers) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 func GenerateRandomState() string {
 	byt := make([]byte, 32)
-	rand.Read(byt)
+	_, err := rand.Read(byt)
+	if err != nil {
+		logger.Log.Error(err)
+	}
 	str := hex.EncodeToString(byt)
 	return str
 }

@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"net/http"
+	"subalertor/logger"
 )
 
 type Response struct {
@@ -14,7 +15,10 @@ type Response struct {
 func WriteJSON(w http.ResponseWriter, status int, data Response) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	err := json.NewEncoder(w).Encode(data)
+	if err != nil {
+		logger.Log.Error(err)
+	}
 }
 
 func InternalServerError(w http.ResponseWriter) {

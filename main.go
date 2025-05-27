@@ -60,7 +60,7 @@ func main() {
 				continue
 			}
 
-			eventsub.SubscribeChannelFollow(
+			err = eventsub.SubscribeChannelFollow(
 				*event.Condition.BroadcasterID,
 				utils.Tokens{
 					AccessToken:  string(accessToken),
@@ -68,6 +68,10 @@ func main() {
 				},
 				twitchClientGrant.ClientID,
 			)
+			if err != nil {
+				logger.Log.Error(err)
+				continue
+			}
 			logger.Log.Info("Subscribed to channel follow")
 		}
 	}

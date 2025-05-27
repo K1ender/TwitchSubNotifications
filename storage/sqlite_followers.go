@@ -42,7 +42,7 @@ func (s *SQLiteFollowersStore) GetFollowers(userID string, offset, limit int) ([
 		followers = append(followers, follower)
 	}
 
-	if rows.Err(); err != nil {
+	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 	if len(followers) == 0 {

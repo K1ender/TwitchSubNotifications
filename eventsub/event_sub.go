@@ -59,7 +59,7 @@ func EventSubHandler(wg *sync.WaitGroup, store *storage.Storage) {
 				username := event["user_login"].(string)
 				user_id := event["user_id"].(string)
 				broadcaster_id := event["broadcaster_user_id"].(string)
-				store.FollowerStore.AddFollower(
+				err := store.FollowerStore.AddFollower(
 					broadcaster_id,
 					storage.FollowerModel{
 						ID:          user_id,
@@ -68,6 +68,11 @@ func EventSubHandler(wg *sync.WaitGroup, store *storage.Storage) {
 						FollowedAt:  int(time.Now().Unix()),
 					},
 				)
+				if err != nil {
+					logger.Log.
+						WithField("error", err).
+						Error("Failed to add follower")
+				}
 				logger.Log.
 					WithField("username", username).
 					Info("New follower")

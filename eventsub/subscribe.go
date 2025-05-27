@@ -3,6 +3,7 @@ package eventsub
 import (
 	"bufio"
 	"encoding/json"
+	"io"
 	"net/http"
 	"subalertor/logger"
 	"subalertor/utils"
@@ -64,7 +65,12 @@ func SubscribeChannelFollow(
 		return err
 	}
 
-	defer res.Body.Close()
+	defer func(body io.ReadCloser) {
+		err := body.Close()
+		if err != nil {
+			logger.Log.Error(err)
+		}
+	}(res.Body)
 
 	if res.StatusCode != 200 && res.StatusCode != 202 {
 		response, _ := bufio.NewReader(res.Body).ReadString('\n')

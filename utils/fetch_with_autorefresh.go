@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"subalertor/config"
@@ -59,7 +60,12 @@ func (f *Fetcher) RefreshAccessUserToken(refreshToken string) (accessToken strin
 		logger.Log.Error(err)
 		return "", "", err
 	}
-	defer res.Body.Close()
+	defer func(body io.ReadCloser) {
+		err := body.Close()
+		if err != nil {
+			logger.Log.Error(err)
+		}
+	}(res.Body)
 
 	if res.StatusCode != 200 {
 		logger.Log.Error("Failed to refresh access token")
