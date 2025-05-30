@@ -16,6 +16,7 @@ type FollowerModel struct {
 type FollowerStore interface {
 	GetFollowers(userID string, offset, limit int) ([]FollowerModel, error)
 	AddFollower(userID string, follower FollowerModel) error
+	DeleteFollower(userID string, followerID string) error
 }
 
 func NewSQLiteFollowersStore(db *sql.DB) *SQLiteFollowersStore {
@@ -52,10 +53,16 @@ func (s *SQLiteFollowersStore) GetFollowers(userID string, offset, limit int) ([
 }
 
 func (s *SQLiteFollowersStore) AddFollower(userID string, follower FollowerModel) error {
-	query := "INSERT INTO followers (id, user_id, display_name, username, followed_at) VALUES (?, ?, ?, ?, ?)"
-	_, err := s.db.Exec(query, follower.ID, userID, follower.DisplayName, follower.Username, follower.FollowedAt)
+	query := "INSERT INTO followers (display_name, username, followed_at, followed_to) VALUES ( ?, ?, ?, ?)"
+	_, err := s.db.Exec(query, follower.DisplayName, follower.Username, follower.FollowedAt, userID)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *SQLiteFollowersStore) DeleteFollower(followerUsername, streamerID string) error {
+	query := "DELETE FROM followers WHERE username = ? AND followed_to = ?"
+	_, err := s.db.Exec(query, followerUsername, streamerID)
+	return err
 }
