@@ -4,6 +4,7 @@ import ky from "ky";
 
 interface User {
   username: string;
+  id: number;
 }
 
 export const useUserStore = defineStore("user", () => {

@@ -7,9 +7,9 @@ import (
 )
 
 type EventSubModel struct {
-	ID        int
-	Condition ConditionModel
-	Type      string
+	ID        int            `json:"id"`
+	Condition ConditionModel `json:"condition"`
+	Type      string         `json:"type"`
 }
 
 func (e EventSubModel) PrettyPrint() string {
@@ -32,16 +32,17 @@ func (e EventSubModel) PrettyPrint() string {
 }
 
 type ConditionModel struct {
-	ID              int
-	BroadCastUserID *string
-	ModeratorUserID *string
-	BroadcasterID   *string
-	UserID          *string
+	ID              int     `json:"-"`
+	BroadCastUserID *string `json:"broadcaster_user_id,omitempty"`
+	ModeratorUserID *string `json:"moderator_user_id,omitempty"`
+	BroadcasterID   *string `json:"broadcaster_id,omitempty"`
+	UserID          *string `json:"user_id,omitempty"`
 }
 
 type EventSubStore interface {
 	AddEventSubscription(eventSub EventSubModel) error
 	GetAllEventSubscriptions() ([]EventSubModel, error)
+	GetSubscribedEvents(userID string) ([]EventSubModel, error)
 }
 
 type SQLiteEventSubStore struct {
@@ -79,6 +80,27 @@ func (s *SQLiteEventSubStore) AddEventSubscription(eventSub EventSubModel) error
 func (s *SQLiteEventSubStore) GetAllEventSubscriptions() ([]EventSubModel, error) {
 	query := "SELECT e.id, e.type, c.broadcaster_id, c.user_id, c.broadcast_user_id, c.moderator_user_id FROM events e JOIN conditions c ON e.condition_id = c.id"
 	rows, err := s.db.Query(query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var eventSubs []EventSubModel
+	for rows.Next() {
+		var eventSub EventSubModel
+		err := rows.Scan(&eventSub.ID, &eventSub.Type, &eventSub.Condition.BroadcasterID, &eventSub.Condition.UserID, &eventSub.Condition.BroadCastUserID, &eventSub.Condition.ModeratorUserID)
+		if err != nil {
+			return nil, err
+		}
+		eventSubs = append(eventSubs, eventSub)
+	}
+
+	return eventSubs, nil
+}
+
+func (s *SQLiteEventSubStore) GetSubscribedEvents(userID string) ([]EventSubModel, error) {
+	query := "SELECT e.id, e.type, c.broadcaster_id, c.user_id, c.broadcast_user_id, c.moderator_user_id FROM events e JOIN conditions c ON e.condition_id = c.id WHERE c.user_id = ?"
+	rows, err := s.db.Query(query, userID)
 
 	if err != nil {
 		return nil, err

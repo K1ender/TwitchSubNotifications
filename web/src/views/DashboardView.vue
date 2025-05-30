@@ -38,19 +38,64 @@ const followers = ref<{
 }[]>([]);
 const limit = ref(10);
 const offset = ref(0);
-onMounted(async () => {
+
+const isSubscribed = ref(false);
+
+async function getSubscriptions() {
+    let res = await ky.get(import.meta.env.VITE_API_ENDPOINT + `/subscribed`, {
+        credentials: 'include'
+    })
+    if (!res.ok) {
+        return;
+    }
+    const data = await res.json<
+        {
+            success: boolean, data: {
+                broadcaster_user_id?: string,
+                moderator_user_id?: string,
+                broadcaster_id?: string,
+                user_id?: string,
+            }[],
+            message: string
+        }>();
+    if (data.data.length > 0) {
+        isSubscribed.value = true;
+    }
+    console.log(data);
+}
+
+async function getLatestFollowers() {
     let res = await ky.get(import.meta.env.VITE_API_ENDPOINT + `/followers?limit=${limit.value}&offset=${offset.value}`, {
         credentials: 'include'
     });
     if (res.ok) {
-        const data = await res.json();
-        console.log(data);
-
-        // totalFollowers.value = data.totalFollowers;
-        // newFollowersThisWeek.value = data.newFollowersThisWeek;
-        // followingBack.value = data.followingBack;
-        // followers.value = data.followers;
+        const data = await res.json<
+            {
+                success: boolean,
+                data: { id: number, displayName: string, avatar: string, followedAt: string }[],
+                message: string
+            }
+        >();
+        followers.value = data.data;
     }
+}
+
+async function subscribe() {
+    if (!store.user) {
+        return;
+    }
+
+    let res = await ky.post(import.meta.env.VITE_API_ENDPOINT + `/subscribe/${store.user.id}`, {
+        credentials: 'include'
+    });
+    if (res.ok) {
+        isSubscribed.value = true;
+    }
+}
+
+onMounted(async () => {
+    await getSubscriptions();
+    await getLatestFollowers();
 })
 </script>
 
@@ -73,6 +118,14 @@ onMounted(async () => {
             </div>
         </div>
 
+        <div>
+            <Button @click="subscribe" v-if="!isSubscribed" variant="default">
+                Subscribe to follows
+            </Button>
+            <Button v-else variant="destructive">
+                Unsubscribe to follows
+            </Button>
+        </div>
         <div class="grid gap-4 md:grid-cols-3">
             <div>
                 <Card class="hover:shadow-lg transition-shadow duration-300">
@@ -87,7 +140,6 @@ onMounted(async () => {
                         <div class="text-2xl font-bold">
                             {{ totalFollowers.toLocaleString() }}
                         </div>
-                        <p class="text-xs text-muted-foreground">+{{ newFollowersThisWeek }} this week</p>
                     </CardContent>
                 </Card>
             </div>
@@ -105,7 +157,6 @@ onMounted(async () => {
                         <div class="text-2xl font-bold">
                             {{ newFollowersThisWeek }}
                         </div>
-                        <p class="text-xs text-muted-foreground">+12% from last week</p>
                     </CardContent>
                 </Card>
             </div>
@@ -123,9 +174,6 @@ onMounted(async () => {
                         <div class="text-2xl font-bold">
                             {{ followingBack }}
                         </div>
-                        <p class="text-xs text-muted-foreground">
-                            {{ Math.round((followingBack / totalFollowers) * 100) }}% of followers
-                        </p>
                     </CardContent>
                 </Card>
             </div>

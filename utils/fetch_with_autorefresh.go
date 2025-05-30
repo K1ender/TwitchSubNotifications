@@ -124,5 +124,9 @@ func (f *Fetcher) FetchTwitchApi(url string, method string, body []byte, tokens 
 		return makeRequest(tokens.AccessToken)
 	}
 
+	if res.StatusCode != 200 && res.StatusCode != 202 {
+		logger.Log.Error("Failed to fetch Twitch API", res.StatusCode)
+	}
+
 	return res, nil
 }

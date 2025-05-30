@@ -21,6 +21,7 @@ func NewProfileHandler(store *storage.Storage) *ProfileHandler {
 
 type UserResponse struct {
 	Username string `json:"username"`
+	ID       string `json:"id"`
 }
 
 func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
@@ -30,6 +31,7 @@ func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "Success",
 		Data: UserResponse{
+			ID:       user.ID,
 			Username: user.Username,
 		},
 	})
@@ -86,5 +88,22 @@ func (h *ProfileHandler) GetLatestFollowers(w http.ResponseWriter, r *http.Reque
 		Success: true,
 		Message: "Success",
 		Data:    followers,
+	})
+}
+
+func (h *ProfileHandler) GetSubscribedEvents(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUserFromContext(r.Context())
+
+	events, err := h.store.EventSubStore.GetSubscribedEvents(user.ID)
+	if err != nil {
+		logger.Log.Error(err)
+		utils.InternalServerError(w)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, utils.Response{
+		Success: true,
+		Message: "Success",
+		Data:    events,
 	})
 }

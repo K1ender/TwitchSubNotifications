@@ -16,6 +16,7 @@ func Run(twitchClientGrant *twitch.ClientCredentials, storage *storage.Storage, 
 	twitchHandler := twitch.NewTwitchHandlers(twitchClientGrant.ClientID, twitchClientGrant.ClientSecret, storage, cfg)
 
 	profileHandler := handlers.NewProfileHandler(storage)
+	subscriptionHandler := handlers.NewSubscriptionHandler(storage, cfg)
 	authMiddleware := middleware.AuthMiddleware(storage)
 	corsMiddleware := middleware.CORS(cfg)
 
@@ -26,6 +27,10 @@ func Run(twitchClientGrant *twitch.ClientCredentials, storage *storage.Storage, 
 	mux.Handle("GET /logout", authMiddleware(http.HandlerFunc(profileHandler.LogoutHandler)))
 
 	mux.Handle("GET /followers", authMiddleware(http.HandlerFunc(profileHandler.GetLatestFollowers)))
+
+	mux.Handle("POST /subscribe/{channel_id}", authMiddleware(http.HandlerFunc(subscriptionHandler.SubscribeChannelFollowHandler)))
+
+	mux.Handle("GET /subscribed", authMiddleware(http.HandlerFunc(profileHandler.GetSubscribedEvents)))
 
 	wrapped := middleware.Use(mux, corsMiddleware)
 
