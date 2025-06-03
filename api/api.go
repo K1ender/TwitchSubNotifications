@@ -29,6 +29,7 @@ func Run(twitchClientGrant *twitch.ClientCredentials, storage *storage.Storage, 
 	mux.Handle("GET /followers", authMiddleware(http.HandlerFunc(profileHandler.GetLatestFollowers)))
 
 	mux.Handle("POST /subscribe/{channel_id}", authMiddleware(http.HandlerFunc(subscriptionHandler.SubscribeChannelFollowHandler)))
+	mux.Handle("POST /unsubscribe/{id}", authMiddleware(http.HandlerFunc(subscriptionHandler.UnsubscribeChannelFollowHandler)))
 
 	mux.Handle("GET /subscribed", authMiddleware(http.HandlerFunc(profileHandler.GetSubscribedEvents)))
 

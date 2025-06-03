@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -124,8 +125,13 @@ func (f *Fetcher) FetchTwitchApi(url string, method string, body []byte, tokens 
 		return makeRequest(tokens.AccessToken)
 	}
 
-	if res.StatusCode != 200 && res.StatusCode != 202 {
+	if res.StatusCode < 200 || res.StatusCode > 299 {
 		logger.Log.Error("Failed to fetch Twitch API", res.StatusCode)
+		scanner := bufio.NewScanner(res.Body)
+		for scanner.Scan() {
+			logger.Log.Error(scanner.Text())
+		}
+		return nil, fmt.Errorf("failed to fetch Twitch API")
 	}
 
 	return res, nil

@@ -60,7 +60,7 @@ func main() {
 				continue
 			}
 
-			err = eventsub.SubscribeChannelFollow(
+			_, err = eventsub.SubscribeChannelFollow(
 				*event.Condition.BroadcasterID,
 				utils.Tokens{
 					AccessToken:  string(accessToken),

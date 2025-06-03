@@ -9,7 +9,7 @@ import { useUserStore } from '@/store/UserStore';
 import ky from 'ky';
 import { Users, TrendingUp, UserPlus, LogOut, Image } from 'lucide-vue-next'
 import { AnimatePresence, motion } from 'motion-v';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const store = useUserStore();
@@ -41,6 +41,17 @@ const offset = ref(0);
 
 const isSubscribed = ref(false);
 
+const subscriptions = ref<{
+    id: string,
+    type: string,
+    condition: {
+        broadcaster_user_id?: string,
+        moderator_user_id?: string,
+        broadcaster_id?: string,
+        user_id?: string,
+    }
+}[]>([]);
+
 async function getSubscriptions() {
     let res = await ky.get(import.meta.env.VITE_API_ENDPOINT + `/subscribed`, {
         credentials: 'include'
@@ -51,18 +62,26 @@ async function getSubscriptions() {
     const data = await res.json<
         {
             success: boolean, data: {
-                broadcaster_user_id?: string,
-                moderator_user_id?: string,
-                broadcaster_id?: string,
-                user_id?: string,
+                id: string,
+                type: string,
+                condition: {
+                    broadcaster_user_id?: string,
+                    moderator_user_id?: string,
+                    broadcaster_id?: string,
+                    user_id?: string,
+                }
             }[],
             message: string
         }>();
     if (data.data.length > 0) {
         isSubscribed.value = true;
     }
-    console.log(data);
+    subscriptions.value = data.data;
 }
+
+const follow_sub_id = computed(() => subscriptions.value.find(sub => {
+    return sub.type === 'channel.follow'
+})?.id);
 
 async function getLatestFollowers() {
     let res = await ky.get(import.meta.env.VITE_API_ENDPOINT + `/followers?limit=${limit.value}&offset=${offset.value}`, {
@@ -91,6 +110,18 @@ async function subscribe() {
     if (res.ok) {
         isSubscribed.value = true;
     }
+    await getSubscriptions();
+}
+
+async function unsubscribe() {
+    console.log(follow_sub_id.value);
+    let res = await ky.post(import.meta.env.VITE_API_ENDPOINT + `/unsubscribe/${follow_sub_id.value}`, {
+        credentials: 'include'
+    });
+    if (res.ok) {
+        isSubscribed.value = false;
+    }
+    await getSubscriptions();
 }
 
 onMounted(async () => {
@@ -122,7 +153,7 @@ onMounted(async () => {
             <Button @click="subscribe" v-if="!isSubscribed" variant="default">
                 Subscribe to follows
             </Button>
-            <Button v-else variant="destructive">
+            <Button @click="unsubscribe" v-else variant="destructive">
                 Unsubscribe to follows
             </Button>
         </div>

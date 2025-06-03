@@ -7,7 +7,7 @@ import (
 )
 
 type EventSubModel struct {
-	ID        int            `json:"id"`
+	ID        string         `json:"id"`
 	Condition ConditionModel `json:"condition"`
 	Type      string         `json:"type"`
 }
@@ -40,7 +40,8 @@ type ConditionModel struct {
 }
 
 type EventSubStore interface {
-	AddEventSubscription(eventSub EventSubModel) error
+	AddEventSubscription(id string, eventSub EventSubModel) error
+	DeleteEventSubscription(id string) error
 	GetAllEventSubscriptions() ([]EventSubModel, error)
 	GetSubscribedEvents(userID string) ([]EventSubModel, error)
 }
@@ -55,26 +56,29 @@ func NewSQLiteEventSubStore(db *sql.DB) *SQLiteEventSubStore {
 	}
 }
 
-func (s *SQLiteEventSubStore) AddEventSubscription(eventSub EventSubModel) error {
+func (s *SQLiteEventSubStore) AddEventSubscription(id string, eventSub EventSubModel) error {
 	query := "INSERT INTO conditions (broadcaster_id, user_id, broadcast_user_id, moderator_user_id) VALUES (?, ?, ?, ?) RETURNING id"
 
-	var id int
-	err := s.db.QueryRow(query, eventSub.Condition.BroadcasterID, eventSub.Condition.UserID, eventSub.Condition.BroadCastUserID, eventSub.Condition.ModeratorUserID).Scan(&id)
-
+	var conditionID int
+	err := s.db.QueryRow(query, eventSub.Condition.BroadcasterID, eventSub.Condition.UserID, eventSub.Condition.BroadCastUserID, eventSub.Condition.ModeratorUserID).Scan(&conditionID)
 	if err != nil {
 		return err
 	}
 
-	query = "INSERT INTO events (type, condition_id) VALUES (?, ?) RETURNING id"
-
-	var eventID int
-	err = s.db.QueryRow(query, eventSub.Type, id).Scan(&eventID)
+	query = "INSERT INTO events (id, type, condition_id) VALUES (?, ?, ?)"
+	_, err = s.db.Exec(query, id, eventSub.Type, conditionID)
 
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (s *SQLiteEventSubStore) DeleteEventSubscription(id string) error {
+	query := "DELETE FROM events WHERE id = ?"
+	_, err := s.db.Exec(query, id)
+	return err
 }
 
 func (s *SQLiteEventSubStore) GetAllEventSubscriptions() ([]EventSubModel, error) {

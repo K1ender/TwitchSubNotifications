@@ -38,7 +38,18 @@ func (h *SubscriptionHandler) SubscribeChannelFollowHandler(w http.ResponseWrite
 		return
 	}
 
-	err = h.store.EventSubStore.AddEventSubscription(storage.EventSubModel{
+	res, err := eventsub.SubscribeChannelFollow(broadcasterID, utils.Tokens{
+		AccessToken:  string(accessToken),
+		RefreshToken: refreshToken,
+	}, user.ID)
+	if err != nil {
+		logger.Log.Error(err)
+		utils.InternalServerError(w)
+		return
+	}
+
+	logger.Log.Debug("Subscribed to channel follow", res.Data[0].ID)
+	err = h.store.EventSubStore.AddEventSubscription(res.Data[0].ID, storage.EventSubModel{
 		Condition: storage.ConditionModel{
 			BroadcasterID: &broadcasterID,
 			UserID:        &broadcasterID,
@@ -51,15 +62,41 @@ func (h *SubscriptionHandler) SubscribeChannelFollowHandler(w http.ResponseWrite
 		return
 	}
 
-	err = eventsub.SubscribeChannelFollow(broadcasterID, utils.Tokens{
-		AccessToken:  string(accessToken),
-		RefreshToken: refreshToken,
-	}, user.ID)
+	utils.WriteJSON(w, http.StatusOK, utils.Response{
+		Success: true,
+		Message: "Success",
+	})
+}
+
+func (h *SubscriptionHandler) UnsubscribeChannelFollowHandler(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUserFromContext(r.Context())
+	id := r.PathValue("id")
+
+	err := h.store.EventSubStore.DeleteEventSubscription(id)
 	if err != nil {
 		logger.Log.Error(err)
 		utils.InternalServerError(w)
 		return
 	}
+
+	accessToken, refreshToken, err := h.store.TokenStore.GetTokens(user.ID)
+	if err != nil {
+		logger.Log.Error(err)
+		utils.InternalServerError(w)
+		return
+	}
+
+	err = eventsub.UnsubscribeChannelFollow(id, h.cfg.Twitch.ClientID, utils.Tokens{
+		AccessToken:  string(accessToken),
+		RefreshToken: refreshToken,
+	})
+	if err != nil {
+		logger.Log.Error(err)
+		utils.InternalServerError(w)
+		return
+	}
+
+	logger.Log.Info("Unsubscribed from channel follow", id)
 
 	utils.WriteJSON(w, http.StatusOK, utils.Response{
 		Success: true,
