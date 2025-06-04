@@ -24,7 +24,7 @@ func Run(twitchClientGrant *twitch.ClientCredentials, storage *storage.Storage, 
 	mux.HandleFunc("GET /callback", twitchHandler.CallbackHandler)
 
 	mux.Handle("GET /profile", authMiddleware(http.HandlerFunc(profileHandler.GetProfile)))
-	mux.Handle("GET /logout", authMiddleware(http.HandlerFunc(profileHandler.LogoutHandler)))
+	mux.Handle("POST /logout", authMiddleware(http.HandlerFunc(profileHandler.LogoutHandler)))
 
 	mux.Handle("GET /followers", authMiddleware(http.HandlerFunc(profileHandler.GetLatestFollowers)))
 

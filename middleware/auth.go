@@ -35,14 +35,13 @@ func AuthMiddleware(store *storage.Storage) func(next http.Handler) http.Handler
 				return
 			}
 
-			if time.Now().Unix()-int64(session.ExpiresAt) > 60*60*24*15 {
+			if session.ExpiresAt-int(time.Now().Unix()) <= 60*60*24*15 {
 				_, err := store.SessionStore.ExtendSession(utils.HashToken(cookie), time.Now().Add(time.Hour*24*15))
 				if err != nil {
 					logger.Log.Error(err)
-					utils.Unauthorized(w)
-					return
+				} else {
+					utils.ExtendAuthCookie(w, r, cookie)
 				}
-				utils.ExtendAuthCookie(w, r, cookie)
 			}
 
 			user, err := store.UserStore.FindUserByID(session.UserID)
@@ -52,7 +51,6 @@ func AuthMiddleware(store *storage.Storage) func(next http.Handler) http.Handler
 				return
 			}
 
-			w.Header().Set("X-User-Id", user.ID)
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, UserCtxKey, user)
 			next.ServeHTTP(w, r.WithContext(ctx))

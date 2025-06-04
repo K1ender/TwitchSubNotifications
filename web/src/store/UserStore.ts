@@ -21,7 +21,7 @@ export const useUserStore = defineStore("user", () => {
     try {
       isLoading.value = true;
       await ky
-        .get(import.meta.env.VITE_API_ENDPOINT + "/logout", {
+        .post(import.meta.env.VITE_API_ENDPOINT + "/logout", {
           credentials: "include",
         })
         .json();
