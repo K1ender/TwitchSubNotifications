@@ -8,6 +8,7 @@ import (
 	"subalertor/middleware"
 	"subalertor/storage"
 	"subalertor/twitch"
+	"subalertor/websocket"
 )
 
 func Run(twitchClientGrant *twitch.ClientCredentials, storage *storage.Storage, cfg *config.Config) {
@@ -17,6 +18,7 @@ func Run(twitchClientGrant *twitch.ClientCredentials, storage *storage.Storage, 
 
 	profileHandler := handlers.NewProfileHandler(storage)
 	subscriptionHandler := handlers.NewSubscriptionHandler(storage, cfg)
+	followEventHandler := websocket.NewEventSubHandler(storage)
 	authMiddleware := middleware.AuthMiddleware(storage)
 	corsMiddleware := middleware.CORS(cfg)
 
@@ -32,6 +34,8 @@ func Run(twitchClientGrant *twitch.ClientCredentials, storage *storage.Storage, 
 	mux.Handle("POST /unsubscribe/{id}", authMiddleware(http.HandlerFunc(subscriptionHandler.UnsubscribeChannelFollowHandler)))
 
 	mux.Handle("GET /subscribed", authMiddleware(http.HandlerFunc(profileHandler.GetSubscribedEvents)))
+
+	mux.Handle("GET /obs", http.HandlerFunc(followEventHandler.FollowHandler))
 
 	wrapped := middleware.Use(mux, corsMiddleware)
 

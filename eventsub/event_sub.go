@@ -3,6 +3,7 @@ package eventsub
 import (
 	"subalertor/logger"
 	"subalertor/storage"
+	events "subalertor/websocket"
 	"sync"
 	"time"
 
@@ -12,6 +13,10 @@ import (
 var SessionID SessionIDType
 
 type SessionIDType string
+
+type Event struct {
+	Username string `json:"username"`
+}
 
 func EventSubHandler(wg *sync.WaitGroup, store *storage.Storage) {
 	ws, _, err := websocket.DefaultDialer.Dial("wss://eventsub.wss.twitch.tv/ws", nil)
@@ -76,6 +81,9 @@ func EventSubHandler(wg *sync.WaitGroup, store *storage.Storage) {
 				logger.Log.
 					WithField("username", username).
 					Info("New follower")
+				events.WebSockets.WebSockets[broadcaster_id].WriteJSON(Event{
+					Username: username,
+				})
 			}
 		} else {
 			logger.Log.

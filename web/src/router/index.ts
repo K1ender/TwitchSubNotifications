@@ -18,6 +18,11 @@ const router = createRouter({
       name: "dashboard",
       component: () => import("../views/DashboardView.vue"),
     },
+    {
+      path: "/obs",
+      name: "obs",
+      component: () => import("../views/OBSView.vue"),
+    },
   ],
 });
 

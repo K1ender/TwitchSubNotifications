@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AuthMiddleware from '@/components/AuthMiddleware.vue';
 import Button from '@/components/ui/button/Button.vue';
 import Card from '@/components/ui/card/Card.vue';
 import CardContent from '@/components/ui/card/CardContent.vue';
@@ -7,19 +8,13 @@ import CardHeader from '@/components/ui/card/CardHeader.vue';
 import CardTitle from '@/components/ui/card/CardTitle.vue';
 import { useUserStore } from '@/store/UserStore';
 import ky from 'ky';
-import { Users, TrendingUp, UserPlus, LogOut, Image } from 'lucide-vue-next'
+import { Users, LogOut, Image } from 'lucide-vue-next'
 import { AnimatePresence, motion } from 'motion-v';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const store = useUserStore();
 const router = useRouter();
-
-onMounted(() => {
-    if (!store.isAuthorized && !store.isLoading) {
-        router.push("/");
-    }
-})
 
 async function logout() {
     await store.logout();
@@ -131,118 +126,91 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-background p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between ">
-            <div>
-                <h1 class="text-3xl font-bold tracking-tight">
-                    Followers
-                </h1>
-                <p class="text-muted-foreground">
-                    Manage and view your follower community
-                </p>
+    <AuthMiddleware>
+        <div class="min-h-screen bg-background p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between ">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">
+                        Followers
+                    </h1>
+                    <p class="text-muted-foreground">
+                        Manage and view your follower community
+                    </p>
+                </div>
+                <div>
+                    <Button @click="logout" variant="outline" class="flex items-center gap-2">
+                        <LogOut class="h-4 w-4" />
+                        Logout
+                    </Button>
+                </div>
             </div>
+
             <div>
-                <Button @click="logout" variant="outline" class="flex items-center gap-2">
-                    <LogOut class="h-4 w-4" />
-                    Logout
+                <Button @click="subscribe" v-if="!isSubscribed" variant="default">
+                    Subscribe to follows
+                </Button>
+                <Button @click="unsubscribe" v-else variant="destructive">
+                    Unsubscribe to follows
                 </Button>
             </div>
-        </div>
-
-        <div>
-            <Button @click="subscribe" v-if="!isSubscribed" variant="default">
-                Subscribe to follows
-            </Button>
-            <Button @click="unsubscribe" v-else variant="destructive">
-                Unsubscribe to follows
-            </Button>
-        </div>
-        <div class="grid gap-4 md:grid-cols-3">
             <div>
-                <Card class="hover:shadow-lg transition-shadow duration-300">
-                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Total Followers</CardTitle>
-                        <motion.div :while-hover="{ scale: 1.1, rotate: 5 }"
-                            :transition="{ type: 'spring', stiffness: 400, damping: 10 }">
-                            <Users class="h-4 w-4 text-muted-foreground" />
-                        </motion.div>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="text-2xl font-bold">
-                            {{ totalFollowers.toLocaleString() }}
-                        </div>
-                    </CardContent>
-                </Card>
+                <Button @click="router.push(`/obs?id=${store.user?.id}`)">
+                    Connect to OBS
+                </Button>
             </div>
-
-            <div>
-                <Card class="hover:shadow-lg transition-shadow duration-300">
-                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">New This Week</CardTitle>
-                        <motion.div :while-hover="{ scale: 1.1, rotate: 5 }"
-                            :transition="{ type: 'spring', stiffness: 400, damping: 10 }">
-                            <TrendingUp class="h-4 w-4 text-muted-foreground" />
-                        </motion.div>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="text-2xl font-bold">
-                            {{ newFollowersThisWeek }}
-                        </div>
-                    </CardContent>
-                </Card>
+            <div class="grid gap-4">
+                <div>
+                    <Card class="hover:shadow-lg transition-shadow duration-300">
+                        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle class="text-sm font-medium">Total Followers</CardTitle>
+                            <motion.div :while-hover="{ scale: 1.1, rotate: 5 }"
+                                :transition="{ type: 'spring', stiffness: 400, damping: 10 }">
+                                <Users class="h-4 w-4 text-muted-foreground" />
+                            </motion.div>
+                        </CardHeader>
+                        <CardContent>
+                            <div class="text-2xl font-bold">
+                                {{ totalFollowers.toLocaleString() }}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
-
-            <div>
-                <Card class="hover:shadow-lg transition-shadow duration-300">
-                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Following Back</CardTitle>
-                        <motion.div :while-hover="{ scale: 1.1, rotate: 5 }"
-                            :transition="{ type: 'spring', stiffness: 400, damping: 10 }">
-                            <UserPlus class="h-4 w-4 text-muted-foreground" />
-                        </motion.div>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="text-2xl font-bold">
-                            {{ followingBack }}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-        <Card>
-            <CardHeader>
-                <CardTitle>Follower List</CardTitle>
-                <CardDescription>View and manage your followers</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <motion.div class="mt-6 space-y-4" layout>
-                    <AnimatePresence mode="popLayout">
-                        <motion.div v-for="(follower, index) in followers" layout :key="follower.id"
-                            class="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                            <div className="flex items-center gap-4">
-                                <div>
-                                    <img :src="follower.avatar || 'https://placehold.co/40x40'"
-                                        :alt="follower.displayName" width="40" height="40" class="rounded-full" />
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <p class="font-medium truncate">{{ follower.displayName }}</p>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Follower List</CardTitle>
+                    <CardDescription>View and manage your followers</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <motion.div class="mt-6 space-y-4" layout>
+                        <AnimatePresence mode="popLayout">
+                            <motion.div v-for="(follower, index) in followers" layout :key="follower.id"
+                                class="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                                <div className="flex items-center gap-4">
+                                    <div>
+                                        <img :src="follower.avatar || 'https://placehold.co/40x40'"
+                                            :alt="follower.displayName" width="40" height="40" class="rounded-full" />
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-medium truncate">{{ follower.displayName }}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <p class="text-xs text-muted-foreground">
-                                    {{ follower.followedAt }}
-                                </p>
-                                <motion.div :while-hover="{ scale: 1.1, rotate: 5 }"
-                                    :transition="{ type: 'spring', stiffness: 400, damping: 10 }">
-                                    <Image class="h-4 w-4 text-muted-foreground" />
-                                </motion.div>
-                            </div>
-                        </motion.div>
-                    </AnimatePresence>
-                </motion.div>
-            </CardContent>
-        </Card>
-    </div>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-xs text-muted-foreground">
+                                        {{ follower.followedAt }}
+                                    </p>
+                                    <motion.div :while-hover="{ scale: 1.1, rotate: 5 }"
+                                        :transition="{ type: 'spring', stiffness: 400, damping: 10 }">
+                                        <Image class="h-4 w-4 text-muted-foreground" />
+                                    </motion.div>
+                                </div>
+                            </motion.div>
+                        </AnimatePresence>
+                    </motion.div>
+                </CardContent>
+            </Card>
+        </div>
+    </AuthMiddleware>
 </template>

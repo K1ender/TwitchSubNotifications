@@ -48,7 +48,7 @@ func (h *SubscriptionHandler) SubscribeChannelFollowHandler(w http.ResponseWrite
 		return
 	}
 
-	logger.Log.Debug("Subscribed to channel follow", res.Data[0].ID)
+	logger.Log.WithField("subscription_id", res.Data[0].ID).Debug("Subscribed to channel follow")
 	err = h.store.EventSubStore.AddEventSubscription(res.Data[0].ID, storage.EventSubModel{
 		Condition: storage.ConditionModel{
 			BroadcasterID: &broadcasterID,
