@@ -39,6 +39,15 @@ func NewEventSubHandler(store *storage.Storage) *EventSubHandler {
 	}
 }
 
+type Event[T any] struct {
+	Type string `json:"type"`
+	Data T      `json:"data"`
+}
+
+type NewSubscriberEvent struct {
+	Username string `json:"username"`
+}
+
 func (h *EventSubHandler) FollowHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("id")
 	if userID == "" {
