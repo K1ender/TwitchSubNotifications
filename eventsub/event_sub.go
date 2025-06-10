@@ -89,7 +89,7 @@ func EventSubHandler(wg *sync.WaitGroup, store *storage.Storage) {
 				events.WebSockets.WebSockets[broadcaster_id].WriteJSON(Event[NewSubscriberEvent]{
 					Type: "new_subscriber",
 					Data: NewSubscriberEvent{
-						Username: username,
+						Username: display_username,
 					},
 				})
 			}
