@@ -14,7 +14,12 @@ var SessionID SessionIDType
 
 type SessionIDType string
 
-type Event struct {
+type Event[T any] struct {
+	Type string `json:"type"`
+	Data T      `json:"data"`
+}
+
+type NewSubscriberEvent struct {
 	Username string `json:"username"`
 }
 
@@ -81,8 +86,11 @@ func EventSubHandler(wg *sync.WaitGroup, store *storage.Storage) {
 				logger.Log.
 					WithField("username", username).
 					Info("New follower")
-				events.WebSockets.WebSockets[broadcaster_id].WriteJSON(Event{
-					Username: username,
+				events.WebSockets.WebSockets[broadcaster_id].WriteJSON(Event[NewSubscriberEvent]{
+					Type: "new_subscriber",
+					Data: NewSubscriberEvent{
+						Username: username,
+					},
 				})
 			}
 		} else {
