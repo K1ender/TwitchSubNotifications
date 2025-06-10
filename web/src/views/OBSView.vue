@@ -28,17 +28,16 @@ websocket.onmessage = (event) => {
 function animateCurrentEvent() {
     if (events.value.length === 0) {
         currentEvent.value = undefined;
-        setTimeout(animateCurrentEvent, 500);
+        requestAnimationFrame(() => animateCurrentEvent());
         return;
     }
 
     currentEvent.value = undefined;
 
-    setTimeout(() => {
+    requestAnimationFrame(() => {
         currentEvent.value = events.value.shift();
-
         setTimeout(animateCurrentEvent, 3000);
-    }, 100);
+    });
 }
 
 onMounted(() => {
