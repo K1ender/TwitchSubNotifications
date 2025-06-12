@@ -78,7 +78,7 @@ func (h *Handlers) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		"client_secret": {h.clientSecret},
 		"code":          {code},
 		"grant_type":    {"authorization_code"},
-		"redirect_uri":  {"http://localhost:5173/callback"},
+		"redirect_uri":  {h.cfg.FrontEndURL + "/callback"},
 	}
 
 	res, err := http.PostForm(utils.AccessTokenURL, form)
@@ -95,7 +95,7 @@ func (h *Handlers) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}(res.Body)
 
 	if res.StatusCode != http.StatusOK {
-		logger.Log.Error("Failed to get access token")
+		logger.Log.Error("Failed to get access token", res.StatusCode)
 		utils.InternalServerError(w)
 		return
 	}

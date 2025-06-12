@@ -14,7 +14,7 @@ func SetAuthCookie(w http.ResponseWriter, r *http.Request, token string) {
 		MaxAge:   60 * 60 * 24 * 30,
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 	}
 	http.SetCookie(w, cookie)
 }
@@ -27,7 +27,7 @@ func ExtendAuthCookie(w http.ResponseWriter, r *http.Request, token string) {
 		MaxAge:   60 * 60 * 24 * 30,
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 	}
 	http.SetCookie(w, cookie)
 }

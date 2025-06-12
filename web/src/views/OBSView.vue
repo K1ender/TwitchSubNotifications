@@ -5,7 +5,8 @@ import { useRoute } from 'vue-router';
 import { AnimatePresence } from "motion-v"
 
 const router = useRoute();
-let websocket = new WebSocket(`ws://${import.meta.env.VITE_WS_ENDPOINT}/obs?id=${router.query.id}`);
+const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+let websocket = new WebSocket(`${protocol}://${import.meta.env.VITE_WS_ENDPOINT}/obs?id=${router.query.id}`);
 const currentEvent = ref<{
     type: string, data: {
         username: string
