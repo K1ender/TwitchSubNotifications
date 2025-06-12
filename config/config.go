@@ -23,7 +23,10 @@ func MustInit() Config {
 	var cfg Config
 	err := cleanenv.ReadConfig(".env", &cfg)
 	if err != nil {
-		panic(err)
+		err := cleanenv.ReadEnv(&cfg)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return cfg
